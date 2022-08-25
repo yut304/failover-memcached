@@ -1,0 +1,55 @@
+version: '2.3'
+services:
+  memcached1:
+    image: memcached:1.4-alpine
+    container_name: memcached1
+    mem_limit: 32m
+    command: [memcached, -vv]
+    ports:
+      - "11212:11211"
+
+  memcached2:
+    image: memcached:1.4-alpine
+    container_name: memcached2
+    mem_limit: 32m
+    command: [memcached, -vv]
+    ports:
+      - "11213:11211"
+
+  testphp:
+    build: ./php/
+    container_name: testphp
+    mem_limit: 256m
+    volumes:
+      - ./web:/var/www/html
+      - ./php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./php/conf.d/docker-php-ext-memcached.ini:/usr/local/etc/php/conf.d/docker-php-ext-memcached.ini
+
+  failover.test:
+    image: nginx:alpine
+    container_name: failover.test
+    mem_limit: 16m
+    volumes:
+      - ./web:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8077:80"
+
+  testphp1:
+    build: ./php1/
+    container_name: testphp1
+    mem_limit: 256m
+    volumes:
+      - ./web:/var/www/html
+      - ./php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./php1/conf.d/memcache.ini:/usr/local/etc/php/conf.d/memcache.ini
+
+  failover1.test:
+    image: nginx:alpine
+    container_name: failover1.test
+    mem_limit: 16m
+    volumes:
+      - ./web:/var/www/html
+      - ./nginx/default1.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8078:80"
